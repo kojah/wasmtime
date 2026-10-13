@@ -1294,6 +1294,17 @@ impl<'func, I: VCodeInst> Lower<'func, I> {
                             }
                         }
                     }
+
+                    // Likewise copy the branch's debug tags to every VCode
+                    // instruction lowered from it.
+                    let debug_tags = self.f.debug_tags.get(branch);
+                    if !debug_tags.is_empty() {
+                        let branch_end = self.vcode.vcode.num_insts();
+                        for i in branch_start..branch_end {
+                            self.vcode
+                                .add_debug_tags(BackwardsInsnIndex::new(i), debug_tags);
+                        }
+                    }
                 }
             } else {
                 // If no orig block, this must be a pure edge block;

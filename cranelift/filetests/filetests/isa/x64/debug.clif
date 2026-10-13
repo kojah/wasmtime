@@ -106,3 +106,90 @@ block0(v0: i32, v1: i32):
 ;   popq %rbp
 ;   retq
 
+
+function %try_call_tags(i64) tail {
+    ss0 = explicit_slot 8, key = 0
+    sig0 = (i64) tail
+    fn0 = colocated %g(i64) tail
+block0(v0: i64):
+<ss0, 1, 2>      call fn0(v0)
+<ss0, 3, 4>      try_call fn0(v0), sig0, block1, [ default: block2 ]
+block1:
+    return
+block2:
+    return
+}
+
+; VCode:
+;   pushq %rbp
+;   movq %rsp, %rbp
+;   subq $0x40, %rsp
+;   movq %rbx, 0x10(%rsp)
+;   movq %r12, 0x18(%rsp)
+;   movq %r13, 0x20(%rsp)
+;   movq %r14, 0x28(%rsp)
+;   movq %r15, 0x30(%rsp)
+; block0:
+;   movq %rdi, %r12
+;   call    TestCase(%g)
+;   ; ^-- debug @ Post: [StackSlot(ss0), User(1), User(2)]
+;   movq %r12, %rdi
+;   call    TestCase(%g); jmp MachLabel(1); catch [default: MachLabel(2)]
+;   ; ^-- debug @ Post: [StackSlot(ss0), User(3), User(4)]
+; block1:
+;   movq 0x10(%rsp), %rbx
+;   movq 0x18(%rsp), %r12
+;   movq 0x20(%rsp), %r13
+;   movq 0x28(%rsp), %r14
+;   movq 0x30(%rsp), %r15
+;   addq $0x40, %rsp
+;   movq %rbp, %rsp
+;   popq %rbp
+;   retq
+; block2:
+;   movq 0x10(%rsp), %rbx
+;   movq 0x18(%rsp), %r12
+;   movq 0x20(%rsp), %r13
+;   movq 0x28(%rsp), %r14
+;   movq 0x30(%rsp), %r15
+;   addq $0x40, %rsp
+;   movq %rbp, %rsp
+;   popq %rbp
+;   retq
+;
+; Disassembled:
+; block0: ; offset 0x0
+;   pushq %rbp
+;   movq %rsp, %rbp
+;   subq $0x40, %rsp
+;   movq %rbx, 0x10(%rsp)
+;   movq %r12, 0x18(%rsp)
+;   movq %r13, 0x20(%rsp)
+;   movq %r14, 0x28(%rsp)
+;   movq %r15, 0x30(%rsp)
+; block1: ; offset 0x21
+;   movq %rdi, %r12
+;   callq 0x29 ; reloc_external CallPCRel4 %g -4
+;   movq %r12, %rdi
+;   callq 0x31 ; reloc_external CallPCRel4 %g -4
+; block2: ; offset 0x31
+;   movq 0x10(%rsp), %rbx
+;   movq 0x18(%rsp), %r12
+;   movq 0x20(%rsp), %r13
+;   movq 0x28(%rsp), %r14
+;   movq 0x30(%rsp), %r15
+;   addq $0x40, %rsp
+;   movq %rbp, %rsp
+;   popq %rbp
+;   retq
+; block3: ; offset 0x53
+;   movq 0x10(%rsp), %rbx
+;   movq 0x18(%rsp), %r12
+;   movq 0x20(%rsp), %r13
+;   movq 0x28(%rsp), %r14
+;   movq 0x30(%rsp), %r15
+;   addq $0x40, %rsp
+;   movq %rbp, %rsp
+;   popq %rbp
+;   retq
+
