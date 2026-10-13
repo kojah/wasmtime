@@ -327,3 +327,25 @@ block0(v0: i128, v1: i128, v2: i128):
 ; run: %select_spectre_guard_i128_cond(0, 2, 3) == 3
 ; run: %select_spectre_guard_i128_cond(18446744073709551616, 2, 3) == 2
 ; run: %select_spectre_guard_i128_cond(18446744073709551616, 18446744073709551616, 3) == 18446744073709551616
+
+function %select_spectre_guard_f32_eq(i8, f32, f32) -> f32 {
+block0(v0: i8, v1: f32, v2: f32):
+  v3 = iconst.i8 42
+  v4 = icmp eq v0, v3
+  v5 = select_spectre_guard.f32 v4, v1, v2
+  return v5
+}
+
+; run: %select_spectre_guard_f32_eq(42, 0x1.0p0, -0x1.0p0) == 0x1.0p0
+; run: %select_spectre_guard_f32_eq(0, 0x1.0p0, -0x1.0p0) == -0x1.0p0
+
+function %select_spectre_guard_f64_eq(i8, f64, f64) -> f64 {
+block0(v0: i8, v1: f64, v2: f64):
+  v3 = iconst.i8 42
+  v4 = icmp eq v0, v3
+  v5 = select_spectre_guard.f64 v4, v1, v2
+  return v5
+}
+
+; run: %select_spectre_guard_f64_eq(42, 0x1.0p0, -0x1.0p0) == 0x1.0p0
+; run: %select_spectre_guard_f64_eq(0, 0x1.0p0, -0x1.0p0) == -0x1.0p0
