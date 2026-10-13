@@ -2078,6 +2078,22 @@ impl<'a> Verifier<'a> {
         entity: impl Into<AnyEntity>,
         errors: &mut VerifierErrors,
     ) -> VerifierStepResult {
+        let entity: AnyEntity = entity.into();
+        // Lowering cannot handle these `sret` forms (see `SigSet::from_func_sig`), so report
+        // them here instead of panicking there.
+        if sig.uses_special_return(ArgumentPurpose::StructReturn) {
+            errors.fatal((
+                entity,
+                "Signature cannot have a struct return (`sret`) return value".to_string(),
+            ))?;
+        }
+        if sig.uses_special_param(ArgumentPurpose::StructReturn) && !sig.returns.is_empty() {
+            errors.fatal((
+                entity,
+                "Signature with a struct return (`sret`) parameter cannot have return values"
+                    .to_string(),
+            ))?;
+        }
         match sig.call_conv {
             CallConv::PreserveAll => {
                 if !sig.returns.is_empty() {
